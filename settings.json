@@ -1,0 +1,89 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run *)",
+      "Bash(uv sync*)",
+      "Bash(uv pip *)",
+      "Bash(just *)",
+      "Bash(ruff *)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(gh:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash list:*)",
+      "Bash(git stash show:*)",
+      "Bash(git blame:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(pwd)",
+      "Bash(cd:*)",
+      "Bash(which:*)",
+      "Bash(file:*)",
+      "Bash(du:*)",
+      "Bash(df:*)",
+      "Read(//home/colby.funnell/**)",
+      "Read(//mnt/bp_storage/**)",
+      "Read(//bp_storage/**)",
+      "Read(//bplocal/**)",
+      "Read(//breedplan7/**)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(gh secret:*)",
+      "Bash(gh repo delete:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Any git push, including via 'git -C <path> push', force-push (--force, -f, +refspec), or branch deletion (git push --delete)",
+      "git reset --hard, git clean -fd, git branch -D, or any command that discards commits, branches, or uncommitted work",
+      "rm -rf / recursive or forced deletion, and deleting files outside the current repo",
+      "Dropping, truncating, or bulk-deleting database tables or rows (DROP, TRUNCATE, unqualified DELETE)",
+      "Editing CI/CD or release machinery (.github/workflows/**, Justfile 'release' recipes that tag and push)",
+      "Writing or rotating secrets/credentials (gh secret set, gh auth, overwriting .env secret values)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  },
+  "effortLevel": "medium",
+  "verbose": true,
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep|Glob|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/colby.funnell/claude/hooks/log-command.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

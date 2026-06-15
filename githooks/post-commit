@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Background review of HEAD via Claude. Fire-and-forget, never blocks the prompt.
+# Output lands in .git/claude-review.md. A terminal bell rings when finished.
+#
+# Opt-out:
+#   - put "[skip-review]" in the commit message, or
+#   - touch .no-claude-review at the repo root.
+
+set -u
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "${repo_root}" || exit 0
+
+[[ -f ".no-claude-review" ]] && exit 0
+
+commit_msg="$(git log -1 --pretty=%B)"
+[[ "${commit_msg}" == *"[skip-review]"* ]] && exit 0
+
+command -v claude >/dev/null 2>&1 || exit 0
+
+short_sha="$(git rev-parse --short HEAD)"
+repo_name="$(basename "${repo_root}")"
+out=".git/claude-review.md"
+
+prompt="Use the \`review\` subagent to review HEAD of the repo at ${repo_root} (${repo_name} @ ${short_sha}). The diff is from \`git show HEAD\`. Output only the review — no preamble."
+
+# Background, detached. nohup so it survives the shell exiting; setsid for a fresh session
+# so a Ctrl-C in the parent terminal doesn't kill the review mid-flight.
+(
+  setsid nohup bash -c "
+    cd '${repo_root}' || exit 1
+    {
+      echo '<!-- review for ${repo_name} @ ${short_sha} -->'
+      echo
+      claude -p '${prompt}' --model claude-sonnet-4-6 2>&1
+    } > '${out}'
+    # Ring the bell + write a one-liner summary so the next prompt shows it.
+    printf '\a' > /dev/tty 2>/dev/null || true
+    if grep -qi '^- ' '${out}' 2>/dev/null; then
+      echo \"claude review: findings in ${out}\" > /dev/tty 2>/dev/null || true
+    else
+      echo \"claude review: clean (${out})\" > /dev/tty 2>/dev/null || true
+    fi
+  " </dev/null >/dev/null 2>&1 &
+) &
+
+exit 0
